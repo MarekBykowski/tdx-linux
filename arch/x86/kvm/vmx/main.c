@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/moduleparam.h>
 
+#define DEBUG
+
 #include "x86_ops.h"
 #include "vmx.h"
 #include "nested.h"
@@ -56,6 +58,7 @@ static __init int vt_hardware_setup(void)
 {
 	int ret;
 
+	pr_info("mb: module_param enable_tdx %s\n", enable_tdx ? "true" : "false");
 	ret = vmx_hardware_setup();
 	if (ret)
 		return ret;
@@ -90,7 +93,16 @@ static __init int vt_hardware_setup(void)
 		pr_warn_ratelimited("TDX requires baremetal. Not Supported on VMM guest.\n");
 	}
 
-	enable_tdx = enable_tdx && !tdx_hardware_setup(&vt_x86_ops);
+	pr_info("mb: module_param enable_tdx %s\n", enable_tdx ? "true" : "false");
+	{
+	bool ths = !tdx_hardware_setup(&vt_x86_ops);
+	pr_info("mb: %pS()->%s()->tdx_hardware_setup(&vt_x86_ops) succeeded? %s\n",
+			(void *)_RET_IP_, __func__,
+			ths ? "yes" : "no");
+
+	enable_tdx = enable_tdx && ths;
+	}
+	pr_info("mb: module_param enable_tdx changed after tdx_hardware_setup? %s\n", enable_tdx ? "true" : "false");
 
 	if (enable_tdx)
 		vt_x86_ops.flush_remote_tlbs = vt_flush_remote_tlbs;
