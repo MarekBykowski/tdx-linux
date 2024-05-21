@@ -5,6 +5,8 @@
  * Intel Trusted Domain Extensions (TDX) support
  */
 
+#define DEBUG
+
 #define pr_fmt(fmt)	"virt/tdx: " fmt
 
 #include <linux/types.h>
